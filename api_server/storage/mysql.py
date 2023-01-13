@@ -1,4 +1,5 @@
 import configparser
+import os
 import re
 
 import pymysql
@@ -7,15 +8,16 @@ from loguru import logger as log
 class SqlAction():
     def __init__(self):
         self.config = configparser.RawConfigParser()
-        self.config.read('./conf/Mysql.ini')
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        self.config.read(os.path.join(parent_dir,'conf/Mysql.ini'))
         host = self.config.get('common','host')
-        port = self.config.get('common','port')
+        port = int(self.config.get('common','port'))
         user = self.config.get('common', 'user')
         password = self.config.get('common', 'password')
         database = self.config.get('common', 'database')
         try:
             self.database = pymysql.connect(host=host,
-                                            port=13306,
+                                            port=port,
                                             user=user,
                                             password=password,
                                             database=database)

@@ -1,4 +1,5 @@
 import json
+import os
 import time
 
 import pika
@@ -7,10 +8,27 @@ from loguru import logger as log
 
 
 class Mq:
+    """
+    rabbitmq快速上手
+    **************************
+    数据流
+    **************************
+                                       /-->[队列(queue)]-->消费者
+    生产者-->[交换机(exchange)](可选)———— --->[队列(queue)]-->消费者
+                                       \-->[队列(queue)]-->消费者
+    |||||||||||||||||||||||||||
+    使用流程
+    0、修改配置文件Rabbit.ini
+    1、声明交换机(可选)、队列(declare_queue/exchange)
+    2、将队列绑定至交换机(bind_queue)(无交换机即跳过)
+    3、生产者投入数据(insert_message_into_exchange/queue)
+    4、消费者使用数据(get_message)
+    """
     def __init__(self):
         self.method_frame = None
         self.config = configparser.RawConfigParser()
-        self.config.read('./conf/Rabbit.ini')
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        self.config.read(os.path.join(parent_dir,'conf/Rabbit.ini'))
         self.connection = self.create_connection()
         self.channel = self.create_channel()
 
@@ -61,6 +79,20 @@ class Mq:
         self.check_connection()
         if not self.channel.is_open:
             self.channel = self.create_channel()
+
+    def init_queue(self,queue_list):
+        for queue in queue_list:
+            self.channel.queue_delete(queue)
+            self.declare_queue(queue)
+
+    def clean_queue(self, queue_name):
+        """
+        清空队列
+        :return:
+        """
+        data = self.get_message(queue_name)
+        while data:
+            data = self.get_message(queue_name)
 
     def declare_queue(self, queue_name, durable=True, exclusive=False):
         """
@@ -238,7 +270,7 @@ class Mq:
         self.close_channel()
         self.create_connection()
 
-
+rabbit = Mq()
 if __name__ == '__main__':
     rabbit = Mq()
     print('test')
