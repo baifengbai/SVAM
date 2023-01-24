@@ -196,9 +196,9 @@ function watch(){
             var clips = getClip()
             if(clips == old_clip){
                 back()
-                sleep(1000)
+                sleep(3000)
                 back()
-                sleep(1000)
+                sleep(3000)
                 launchApp('抖音')
                 sleep(2000)
             }
@@ -225,11 +225,11 @@ function watch(){
     } catch (error) {
         console.error(error)
         back()
-        sleep(1500)
+        sleep(3500)
         back()
-        sleep(1500)
+        sleep(3500)
         back()
-        sleep(1500)
+        sleep(3500)
         launchApp('抖音')
         sleep(5000)
         next()

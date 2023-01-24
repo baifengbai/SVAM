@@ -10,7 +10,7 @@ from api_server.storage.mysql import mysql
 def download_file():
     while True:
         try:
-            data = rabbit.get_message_not_ack('download')
+            data = rabbit.get_message('download')
             if data:
                 data = data['data']
                 if data['url'] == '0':
@@ -21,7 +21,6 @@ def download_file():
                         continue
                 except:
                     continue
-                rabbit.ack_this_message()
                 f = open(data['save_path']+data['file_name'], 'wb')
                 f.write(response.content)
                 f.close()
