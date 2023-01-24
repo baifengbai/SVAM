@@ -1,10 +1,12 @@
 import json
 import os
+from hashlib import md5
 
 import requests
 from flask import Flask, request, Response
 
 from storage.rabbitmq import rabbit
+from storage.mysql import mysql
 
 from tencentcloud.common import credential
 from tencentcloud.common.profile.client_profile import ClientProfile
@@ -14,7 +16,6 @@ from tencentcloud.iai.v20200303 import iai_client, models
 
 # rabbit.init_queue(['download','douyin_upload','kuaishou_upload'])
 app = Flask("my-app")
-
 
 
 @app.route('/')
@@ -30,10 +31,12 @@ def add():
     result = request.json['a'] + request.json['b']
     return str(result)
 
+
 @app.route('/add2', methods=['POST'])
 def add2():
     result = {'sum': request.json['a'] + request.json['b']}
-    return Response(json.dumps(result),  mimetype='application/json')
+    return Response(json.dumps(result), mimetype='application/json')
+
 
 # 人脸识别
 @app.route("/face", methods=['POST'])
@@ -54,7 +57,7 @@ def face():
                 "NeedFaceAttributes": 1
             }
         if not (image_64 or image_url):
-            result = {'code':201,'data':"没有图片！"}
+            result = {'code': 201, 'data': "没有图片！"}
             return Response(json.dumps(result), mimetype='application/json')
         cred = credential.Credential("AKIDCDyTheKp30g4C3ez4sPffOq1vZv0oMdd", "lGUR7WeV5ORDivta0bw1pMbaHistd6ID")
         # 实例化一个http选项，可选的，没有特殊需求可以跳过
@@ -74,25 +77,28 @@ def face():
         res = json.loads(resp.to_json_string())
         res = res['FaceInfos'][0]
         print(res)
-        result = {'code':200,'data':json.dumps(res)}
+        result = {'code': 200, 'data': json.dumps(res)}
         return Response(json.dumps(result), mimetype='application/json')
     except:
-        result = {'code':202,'data':''}
+        result = {'code': 202, 'data': ''}
         return Response(json.dumps(result), mimetype='application/json')
+
+
 # 视频链接解析
 @app.route('/video_link_analysis', methods=['POST'])
 def video_link_analysis():
     video_link = request.json['video_link']
     print(video_link)
-    video_link = 'http'+video_link.split('http')[-1]
+    video_link = 'http' + video_link.split('http')[-1]
     print(video_link)
-    res = requests.get('http://192.168.31.214:22980/?url='+video_link)
+    res = requests.get('http://192.168.31.214:22980/?url=' + video_link)
     if res.json()['code'] == 200:
-        result = {'code':200,'data':res.json()['data']}
+        result = {'code': 200, 'data': res.json()['data']}
         return Response(json.dumps(result), mimetype='application/json')
     else:
-        result = {'code':999,'data':{}}
+        result = {'code': 999, 'data': {}}
         return Response(json.dumps(result), mimetype='application/json')
+
 
 # 下载到服务器
 @app.route('/download_to_server', methods=['POST'])
@@ -100,8 +106,9 @@ def download_to_server():
     download_url = request.json['url']
     file_name = request.json['file_name']
     save_path = request.json['save_path']
-    rabbit.insert_message_into_queue('download',request.json)
+    rabbit.insert_message_into_queue('download', request.json)
     return 'ok'
+
 
 # 上传到服务器
 @app.route('/upload_to_server', methods=['POST'])
@@ -114,15 +121,32 @@ def upload_to_server():
     file_write.close()
     return 'ok'
 
+
 # 获取待发布视频
 @app.route('/get_up_video', methods=['POST'])
 def get_up_video():
     platform = request.json['platform']
     type = request.json['type']
-    queue_name= platform+f'_{type}'+'_upload'
-    message=rabbit.get_message(queue_name)
+    queue_name = platform + f'_{type}' + '_upload'
+    message = rabbit.get_message(queue_name)
     return message
 
+
+# 生成uuid
+@app.route('/uuid', methods=['POST'])
+def make_uuid():
+    text = request.json['text']
+    return md5(text.encode(encoding="utf-8")).hexdigest()
+
+
+# 写入数据库
+@app.route('/insert_mysql', methods=['POST'])
+def insert_mysql():
+    table = request.json['table']
+    data = request.json['data']
+    condition = request.json['condition']
+    mysql.insert_data_into_mysql(table, data, condition)
+    return 'ok'
 
 
 # 记录日志

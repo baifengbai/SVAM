@@ -66,7 +66,7 @@ class SqlAction():
         :param condition: str 条件
         '''
         self.check_connection()
-        self.check_table_exist(table)
+        # self.check_table_exist(table)
         if condition == '':
             sql = f"""INSERT INTO {table}
          VALUES {data}"""
@@ -157,6 +157,7 @@ class SqlAction():
         self.database.close()
         log.info('已经关闭sql连接')
 
+mysql = SqlAction()
 if __name__ == '__main__':
     test = SqlAction()
     test.get_data_from_mysql('test', 'distinct test_id')

@@ -1,4 +1,5 @@
 setScreenMetrics(1080,2340)
+var api_host = "http://192.168.21.71:21000/"
 var old_clip = ''
 // 按钮位置
 // 搜索按钮位置
@@ -59,7 +60,7 @@ function face_info(){
         i = images.captureScreen();
         i_64 = images.toBase64(i, "jpeg", 50);
         i.recycle();
-        var url = "http://192.168.21.71:21000/face";
+        var url = api_host+"face";
         r = http.postJson(url, {
             url: "",
             image: i_64,
@@ -104,7 +105,7 @@ function copy(){
 // 视频链接解析
 function video_url(video_link){
     try {
-        var url = "http://192.168.21.71:21000/video_link_analysis";
+        var url = api_host+"video_link_analysis";
         r = http.postJson(url, {
             video_link:video_link,
         });
@@ -119,10 +120,11 @@ function video_url(video_link){
 }
 
 // 下载文件
-function download(f_name,f_url,path){
+function download(uuid,f_name,f_url,path){
     try {
-        var url = "http://192.168.21.71:21000/download_to_server";
+        var url = api_host+"download_to_server";
         r = http.postJson(url, {
+            uuid:uuid,
             file_name:f_name,
             url:f_url,
             save_path:path
@@ -131,6 +133,50 @@ function download(f_name,f_url,path){
         console.log(error)
     }
 }
+
+// 获取uuid
+function get_uuid(text){
+    try {
+        var url = api_host+"uuid";
+        r = http.postJson(url, {
+            text:text
+        });
+        if (r.statusCode != 200){
+            get_uuid(text)
+        }
+        return r.body.string()
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+// 素材信息入数据库
+function insert_mysql(uuid,title){
+    try {
+        var url = api_host+"insert_mysql";
+        r = http.postJson(url, {
+            table:"source_info(uuid,title,data_type,inner_type,style,origin_time)",
+            data:"('"+[uuid,title,'抖音','小姐姐','小姐姐',now_datetime()].join("','")+"')",
+            condition:''
+        });
+    } catch (error) {
+        console.log(error)
+    }
+}
+// 当前日期格式化为yyyy-MM-dd  hh:mm:ss
+function now_datetime()
+	{
+		//dataString是整数，否则要parseInt转换
+        var dataString = Date.parse(new Date())
+		var time = new Date(dataString);
+		var year = time.getFullYear();
+		var month = time.getMonth()+1;
+		var day = time.getDate();
+		var hour = time.getHours();
+		var minute = time.getMinutes();
+		var second = time.getSeconds();
+		return year+'-'+(month<10?'0'+month:month)+'-'+(day<10?'0'+day:day)+' '+(hour<10?'0'+hour:hour)+':'+(minute<10?'0'+minute:minute)+':'+(second<10?'0'+second:second)
+	}
 
 // 观看视频
 function watch(){
@@ -158,14 +204,15 @@ function watch(){
                 old_clip = clips
                 console.log(clips)
                 detail = video_url(clips)
-                author = detail['author']
-                title = detail['title']
+                title = detail['author']+'_'+detail['title']
+                uuid = get_uuid('抖音'+'小姐姐'+title)
+                insert_mysql(uuid,title)
                 cover = detail['cover']
                 video = detail['url']
                 launchApp("抖音");
                 sleep(1000)
-                download(author+'_'+title+'.mp4',video,'/mnt/l1/short_video/douyin/sister/video/')
-                download(author+'_'+title+'.jpg',cover,'/mnt/l1/short_video/douyin/sister/cover/')
+                download(uuid,title+'.mp4',video,'/mnt/l1/short_video/douyin/sister/video/')
+                download(uuid,title+'.jpg',cover,'/mnt/l1/short_video/douyin/sister/cover/')
             }
             next();
         }
@@ -173,11 +220,13 @@ function watch(){
     } catch (error) {
         console.error(error)
         back()
-        sleep(1000)
+        sleep(1500)
         back()
-        sleep(1000)
+        sleep(1500)
+        back()
+        sleep(1500)
         launchApp('抖音')
-        sleep(2000)
+        sleep(5000)
         next()
     }
 }
