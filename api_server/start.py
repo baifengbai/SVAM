@@ -14,7 +14,7 @@ from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.iai.v20200303 import iai_client, models
 
-# rabbit.init_queue(['download','douyin_upload','kuaishou_upload'])
+rabbit.init_queue(['download','douyin_upload','kuaishou_upload'])
 app = Flask("my-app")
 
 
@@ -54,7 +54,8 @@ def face():
             image_64 = ""
             params = {
                 "Url": image_url,
-                "NeedFaceAttributes": 1
+                "NeedFaceAttributes": 1,
+                "MinFaceSize":50,
             }
         if not (image_64 or image_url):
             result = {'code': 201, 'data': "没有图片！"}

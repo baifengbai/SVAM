@@ -100,6 +100,7 @@ function copy(){
     click(res.centerX+random(-10,10),res.centerY+1691+random(-10,10));
     big.recycle()
     clip.recycle()
+    i.recycle()
 }
 
 // 视频链接解析
@@ -181,9 +182,10 @@ function now_datetime()
 // 观看视频
 function watch(){
     try {
+        launchApp('抖音')
         sleep(1000+random(1000,3000))
         info = face_info();
-        console.log(info['Beauty'])
+        toast('年龄：'+ info['Age']+' 人脸评分：' + info['Beauty'])
         if (info['Beauty']>90 && info['Age']<30){
             love();
             sleep(1000);
@@ -205,6 +207,9 @@ function watch(){
                 console.log(clips)
                 detail = video_url(clips)
                 title = detail['author']+'_'+detail['title']
+                if (title == '0_0' || title == 'null_null'){
+                    return 0;
+                }
                 uuid = get_uuid('抖音'+'小姐姐'+title)
                 insert_mysql(uuid,title)
                 cover = detail['cover']
