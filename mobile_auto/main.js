@@ -1,1 +1,2 @@
-toastLog('Hello, Auto.js ' + $app.autojs.versionName);
+import {run} from "./douyin.js"
+run()

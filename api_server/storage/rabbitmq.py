@@ -72,12 +72,18 @@ class Mq:
         raise 'RabbitMq:channel Error'
 
     def check_connection(self):
-        if not self.connection.is_open:
+        try:
+            if not self.connection.is_open:
+                self.connection = self.create_connection()
+        except:
             self.connection = self.create_connection()
 
     def check_channel(self):
-        self.check_connection()
-        if not self.channel.is_open:
+        try:
+            self.check_connection()
+            if not self.channel.is_open:
+                self.channel = self.create_channel()
+        except:
             self.channel = self.create_channel()
 
     def init_queue(self,queue_list):
