@@ -2,15 +2,16 @@ from hashlib import md5
 from random import randint
 from time import sleep
 
+
 from moviepy.editor import *
 from loguru import logger
 
 class ContentMaker:
     def __init__(self):
-        from api_server.storage.mysql import mysql
-        from api_server.storage.rabbitmq import rabbit
-        self.mysql = mysql
-        self.rabbit = rabbit
+        from api_server.storage.mysql import SqlAction
+        from api_server.storage.rabbitmq import Mq
+        self.mysql = SqlAction()
+        self.rabbit = Mq()
 
     def make_sister_video(self, clip_dict):
         # 生成开头
@@ -27,10 +28,10 @@ class ContentMaker:
         txt_clip = TextClip("那些漂亮的小姐姐", fontsize=70, color='white', font='./STXIHEI.TTF').set_pos(
             'center').set_duration(5).fx(vfx.fadein, 1.5).fx(vfx.fadeout, 1.5)
         main = concatenate_videoclips(list(clip_dict.values()), method='compose').resize(width=1080)
-        main = CompositeVideoClip([start, txt_clip.set_start(3.5), main.set_start(8)])
+        main = CompositeVideoClip([start, main.set_start(8)])
         return main
 
-    def sister(self, count):
+    def sister(self,count):
         for i in range(count):
             origin_clips, selected_list = self.get_origin_clips('抖音', '小姐姐', '小姐姐')
             video = self.make_sister_video(origin_clips)
@@ -38,7 +39,7 @@ class ContentMaker:
             uuid = md5(str(selected_list).encode(encoding="utf-8")).hexdigest()
             title = uuid[:10]
             save_path = '/mnt/l1/short_video/creation/' + title + '.mp4'
-            video.write_videofile(save_path)
+            video.write_videofile(save_path,threads=32)
             for id in selected_list:
                 old = self.mysql.get_data_from_mysql('source_info', 'used_time', f"uuid='{id}'")
                 self.mysql.update_data_into_mysql('source_info', f'used_time={old + 1}', f"uuid='{id}'")
