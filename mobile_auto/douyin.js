@@ -94,13 +94,12 @@ function copy(){
     swipe(start_x, start_y, start_x+random(-600,-450), start_y-random(-50,100), random(100,300));
     sleep(2000)
     i = images.captureScreen();
-    clip = images.clip(i, 0, 1691, 1080, 649);
+    let clip = images.clip(i, 0, 1691, 1080, 649);
     big = images.detectAndComputeFeatures(clip);
-    res = images.matchFeatures(scene=big,object=small);
-    click(res.centerX+random(-10,10),res.centerY+1691+random(-10,10));
-    big.recycle()
     clip.recycle()
-    i.recycle()
+    res = images.matchFeatures(scene=big,object=small);
+    big.recycle()
+    click(res.centerX+random(-10,10),res.centerY+1691+random(-10,10));
 }
 
 // 视频链接解析

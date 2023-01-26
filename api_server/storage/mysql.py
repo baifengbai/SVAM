@@ -145,7 +145,6 @@ class SqlAction():
                 data = tuple(new_data)
             if len(data) == 1 and condition != '':
                 data = data[0]
-            log.info(f'数据库读取信息成功{table}->{data}')
             return data
         except:
             self.database.close()
@@ -160,5 +159,6 @@ class SqlAction():
 mysql = SqlAction()
 if __name__ == '__main__':
     test = SqlAction()
-    test.get_data_from_mysql('test', 'distinct test_id')
+    old = mysql.get_data_from_mysql('source_info','used_time',f"uuid='2cecba97f55ff992a3d5279a78cb3347'")
+    mysql.update_data_into_mysql('source_info', f'used_time=0', f"uuid='2cecba97f55ff992a3d5279a78cb3347'")
     test.quit_database()
